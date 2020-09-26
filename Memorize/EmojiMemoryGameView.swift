@@ -25,23 +25,40 @@ struct EmojiMemoryGameView: View {
 }
 
 struct CardView: View {
-    let card: StringMemoryGame.Card
+    // MARK: - Drawing Constants
+    
+    let cornerRadius: CGFloat = 10
+    let edgeLineWidth: CGFloat = 3
+    let fontScale: CGFloat = 0.75
     let aspectRatio: CGFloat = 2 / 3
+    
+    let card: StringMemoryGame.Card
     
     var body: some View {
         GeometryReader { geometry in
-            ZStack {
-                if self.card.isFaceUp {
-                    RoundedRectangle(cornerRadius: 10).fill(Color.white)
-                    RoundedRectangle(cornerRadius: 10).stroke(lineWidth: 3)
-                    Text(self.card.content)
-                } else {
-                    RoundedRectangle(cornerRadius: 10).fill()
-                }
-            }
-            .font(.system(size: min(geometry.size.height, geometry.size.width) * 0.75))
-            .aspectRatio(self.aspectRatio, contentMode: .fit)
+            self.body(for: geometry.size)
         }
+    }
+    var cardRectangle: RoundedRectangle {
+        RoundedRectangle(cornerRadius: self.cornerRadius)
+    }
+    
+    func body(for size: CGSize) -> some View {
+        ZStack {
+            if self.card.isFaceUp {
+                self.cardRectangle.fill(Color.white)
+                self.cardRectangle.stroke(lineWidth: self.edgeLineWidth)
+                Text(self.card.content)
+            } else {
+                self.cardRectangle.fill()
+            }
+        }
+        .font(.system(size: self.fontSize(for: size)))
+        .aspectRatio(self.aspectRatio, contentMode: .fit)
+    }
+    
+    func fontSize(for size: CGSize) -> CGFloat {
+        min(size.height, size.width) * self.fontScale
     }
 }
 
