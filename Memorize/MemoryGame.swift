@@ -37,8 +37,9 @@ struct MemoryGame<CardContent: Equatable> {
         }
     }
     
-    mutating func choose(card: Card) {
+    mutating func choose(card: Card?) {
         guard
+            let card = card,
             let chosenCardIndex = self.cards.firstIndex(matching: card),
             !self.cards[chosenCardIndex].isFaceUp,
             !self.cards[chosenCardIndex].isMatched
