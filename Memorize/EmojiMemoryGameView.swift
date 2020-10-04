@@ -11,14 +11,29 @@ import SwiftUI
 struct EmojiMemoryGameView: View {
     @ObservedObject var viewModel: EmojiMemoryGame
     
-    var body: some View {
+    let resetGameAnumationDuration: Double = 1
+    let flipAnimationDuration: Double = 0.75
+    
+    var grid: some View {
         Grid(self.viewModel.cards) { card in
             CardView(card: card).onTapGesture {
-                self.viewModel.choose(card: card)
+                withAnimation(.linear(duration: self.flipAnimationDuration)) {
+                    self.viewModel.choose(card: card)
+                }
             }.padding(5)
         }
         .padding()
-        .foregroundColor(.orange)
+    }
+    
+    var body: some View {
+        VStack {
+            self.grid
+            Button() {
+                withAnimation(.easeInOut(duration: self.resetGameAnumationDuration)) {
+                    self.viewModel.resetGame()
+                }
+            } label: { Text("New Game") }
+        }.foregroundColor(.orange)
     }
 }
 
@@ -35,14 +50,47 @@ struct CardView: View {
         }
     }
     
+    private var animatedPie: some View {
+        Group {
+            if self.card.isConsumingBonusTime {
+                self.pie(withEndAnglePercent: self.animatedBonusRemaning)
+                    .onAppear {
+                        self.startBonusTimeAnimation()
+                    }
+            } else {
+                self.pie(withEndAnglePercent: self.card.bonusRemaining)
+            }
+        }
+    }
+    
+    @State private var animatedBonusRemaning: Double = 0
+    
+    private func startBonusTimeAnimation() {
+        self.animatedBonusRemaning = self.card.bonusRemaining
+        withAnimation(.linear(duration: self.card.bonusTimeRemaining)) {
+            self.animatedBonusRemaning = 0
+        }
+    }
+    
     @ViewBuilder
     private func body(for size: CGSize) -> some View {
         if self.card.isFaceUp || !self.card.isMatched {
             ZStack {
-                Pie(startAngle: Angle.degrees(0-90), endAngle: Angle.degrees(110-90)).padding(5).opacity(0.4)
-                Text(self.card.content).font(.system(size: self.fontSize(for: size)))
-            }.cardify(isFaceUp: self.card.isFaceUp)
+                self.animatedPie
+                .padding(5)
+                .opacity(0.4)
+                Text(self.card.content)
+                    .font(.system(size: self.fontSize(for: size)))
+                    .rotationEffect(Angle.degrees(self.card.isMatched ? 360 : 0))
+                    .animation(self.card.isMatched ?  Animation.linear(duration: 1).repeatForever(autoreverses: false) : .default)
+            }
+            .cardify(isFaceUp: self.card.isFaceUp)
+            .transition(.scale)
         }
+    }
+    
+    private func pie(withEndAnglePercent endAnglePercent: Double) -> some View {
+        Pie(startAngle: Angle.degrees(0 - 90), endAngle: Angle.degrees(-endAnglePercent * 360 - 90))
     }
     
     private func fontSize(for size: CGSize) -> CGFloat {
