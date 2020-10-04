@@ -10,16 +10,15 @@ import SwiftUI
 
 class EmojiMemoryGame: ObservableObject {
     @Published private var model = EmojiMemoryGame.createMemoryGame()
+    private static let emojis = ["👻", "🎃", "🕷"]
     
     // MARK: - Access to the Model
     
     var cards: [StringMemoryGame.Card] { self.model.cards }
     
     private static func createMemoryGame() -> StringMemoryGame {
-        let emojis = ["👻", "🎃", "🕷", "🤡", "💀"].shuffled()
-        let randomNumber = Int.random(in: 2...emojis.count)
-        return StringMemoryGame(numberOfPairsOfCards: randomNumber) { pairIndex in
-            emojis[pairIndex]
+        StringMemoryGame(numberOfPairsOfCards: EmojiMemoryGame.emojis.count) { pairIndex in
+            EmojiMemoryGame.emojis[pairIndex]
         }
     }
     
